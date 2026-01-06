@@ -1,0 +1,179 @@
+{
+  "personal": {
+    "name": "Keshore Venkatachalam Murugesan",
+    "age": 22,
+    "location": "Tamil Nadu, India",
+    "title": "Full Stack Developer | MERN | Firebase | ML Enthusiast",
+    "email": "keshorevm@gmail.com",
+    "phone": "",
+    "handle": "@keshorevm",
+    "bio": "Hey 👋\nI'm Keshore, a Computer Science Engineering student passionate about full-stack development, automation, and data-driven applications. I enjoy building real-world projects using React, Node.js, Firebase, and Python, and I’m constantly improving my skills to become industry-ready.",
+    "avatar": "/avater.png",
+    "fallbackAvatar": "https://images.unsplash.com/photo-1610216705422-caa3fcb6d158"
+  },
+  "education": {
+    "current": {
+      "degree": "B.E / B.Tech in Computer Science and Engineering",
+      "institution": "Kongu Engineering College",
+      "duration": "2022-2026",
+      "cgpa": "",
+      "graduationDate": "2026"
+    }
+  },
+  "experience": [
+    {
+      "company": "Datinfi Private Limited (Wersel – Sister Company)",
+      "position": "Software Development Intern",
+      "type": "Internship",
+      "duration": "December 2025",
+      "description": "Worked on real-world development tasks involving frontend, backend integration, and automation scripts. Gained hands-on experience with production-ready code and project workflows.",
+      "technologies": [
+        "JavaScript",
+        "React",
+        "Node.js",
+        "MongoDB",
+        "Firebase"
+      ]
+    }
+  ],
+  "skills": {
+    "programming": [
+      "JavaScript",
+      "Python",
+      "HTML",
+      "CSS",
+      "SQL"
+    ],
+    "web_development": [
+      "React.js",
+      "Node.js",
+      "Express.js",
+      "Firebase",
+      "Bootstrap",
+      "Tailwind CSS"
+    ],
+    "databases": [
+      "MongoDB",
+      "Firebase",
+      "MySQL"
+    ],
+    "tools": [
+      "Git",
+      "GitHub",
+      "VS Code",
+      "Postman"
+    ],
+    "other": [
+      "Web Scraping",
+      "Automation",
+      "API Integration"
+    ]
+  },
+  "projects": [
+    {
+      "title": "Expense Tracker",
+      "category": "Full Stack Web App",
+      "description": "A finance management application with authentication, income and expense tracking, dashboard analytics, and CSV import/export functionality.",
+      "techStack": [
+        "React",
+        "Firebase",
+        "Ant Design"
+      ],
+      "status": "Completed",
+      "featured": true,
+      "links": [
+        {
+          "name": "Live Site",
+          "url": "https://expense-tracker-wallet-guard-3bdi.vercel.app/"
+        }
+      ]
+    },
+    {
+      "title": "Zomato Data Scraper",
+      "category": "Automation / Web Scraping",
+      "description": "Python-based scraper that extracts restaurant details, menus, and reviews from Zomato for analysis and storage.",
+      "techStack": [
+        "Python",
+        "BeautifulSoup",
+        "Requests"
+      ],
+      "status": "Completed",
+      "featured": true
+    },
+    {
+      "title": "Smart Post Box",
+      "category": "IoT Concept",
+      "description": "Conceptual smart post box system for detecting deliveries and notifications using sensors and automation logic.",
+      "techStack": [
+        "IoT",
+        "Sensors",
+        "Python"
+      ],
+      "status": "Concept",
+      "featured": false
+    }
+  ],
+  "social": {
+    "linkedin": "https://www.linkedin.com/in/keshorevm/",
+    "github": "https://github.com/keshorerode",
+    "portfolio": ""
+  },
+  "internship": {
+    "seeking": true,
+    "preferredLocation": "On-site / Remote",
+    "focusAreas": [
+      "Full Stack Development",
+      "Backend Development",
+      "Automation"
+    ],
+    "availability": "Available"
+  },
+  "resume": {
+    "title": "Keshore_Resume",
+    "description": "Professional Resume - Full Stack Developer",
+    "fileType": "PDF",
+    "lastUpdated": "January 2026",
+    "fileSize": "1.2 MB",
+    "downloadUrl": "/resume.pdf"
+  },
+  "chatbot": {
+    "name": "Keshore",
+    "personality": "professional, friendly, tech-focused",
+    "tone": "clear and conversational",
+    "language": "english",
+    "responseStyle": "short and informative",
+    "useEmojis": false,
+    "topics": [
+      "projects",
+      "skills",
+      "experience",
+      "resume",
+      "contact"
+    ]
+  },
+  "presetQuestions": {
+    "me": [
+      "Who are you?",
+      "Tell me about yourself",
+      "What is your background?"
+    ],
+    "professional": [
+      "What skills do you have?",
+      "What projects have you built?",
+      "Are you available for opportunities?"
+    ],
+    "projects": [
+      "Tell me about your expense tracker project",
+      "Show me your web projects"
+    ],
+    "contact": [
+      "How can I contact you?",
+      "Where can I find you online?"
+    ]
+  },
+  "meta": {
+    "configVersion": "1.0",
+    "generatedBy": "Keshore Venkatachalam Murugesan",
+    "description": "Portfolio chatbot configuration for digital twin interface"
+  }
+}
