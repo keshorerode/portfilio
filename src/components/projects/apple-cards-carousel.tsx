@@ -46,7 +46,7 @@ export const CarouselContext = createContext<{
   onCardClose: (index: number) => void;
   currentIndex: number;
 }>({
-  onCardClose: () => {},
+  onCardClose: () => { },
   currentIndex: 0,
 });
 
@@ -159,9 +159,9 @@ export const Carousel = ({
                     duration: 0.5,
                     delay: 0.2 * index,
                     ease: 'easeOut',
-                    once: true,
                   },
                 }}
+                viewport={{ once: true }}
                 key={'card' + index}
                 className="rounded-3xl last:pr-[5%] md:last:pr-[33%]"
               >
@@ -190,6 +190,8 @@ export const Carousel = ({
     </CarouselContext.Provider>
   );
 };
+
+
 
 export const Card = ({
   card,
@@ -266,7 +268,7 @@ export const Card = ({
               <div className="relative px-8 pt-2 pb-0 md:px-14">
                 <div>
                   <motion.p
-                    layoutId={layout ? `category-${card.title}` : undefined}
+                    layoutId={layout ? `category-${card.category}-${card.title}` : undefined}
                     className="text-base font-medium text-black dark:text-white"
                   >
                     {card.category}
@@ -295,7 +297,7 @@ export const Card = ({
         {/*<div className="absolute inset-0 z-20 cursor-pointer bg-black/20 hover:bg-black/2" />*/}
         <div className="relative z-40 p-8">
           <motion.p
-            layoutId={layout ? `category-${card.category}` : undefined}
+            layoutId={layout ? `category-${card.category}-${card.title}` : undefined}
             className="text-left font-sans text-sm font-medium text-white md:text-base"
           >
             {card.category}

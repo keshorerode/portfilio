@@ -1,5 +1,5 @@
 'use client';
-import { useChat } from '@ai-sdk/react';
+import { useChat } from 'ai/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
@@ -55,7 +55,7 @@ const Avatar = dynamic<AvatarProps>(
             onClick={() => (window.location.href = '/')}
           >
             <img
-              src="/avater.png"
+              src="/profile1.jpg"
               alt="Avatar"
               className="h-full w-full object-cover object-[center] scale-100 rounded-full"
             />
@@ -88,6 +88,72 @@ const Chat = () => {
   } | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  const chatHelpers = useChat({
+    onResponse: (response) => {
+      if (response) {
+        setLoadingSubmit(false);
+      }
+    },
+    onFinish: () => {
+      setLoadingSubmit(false);
+    },
+    onError: (error) => {
+      setLoadingSubmit(false);
+      console.warn('Chat error:', error);
+
+      const errorMessage = error.message?.toLowerCase() || '';
+
+      // Handle specific error types (Groq, Gemini, OpenAI rate limits)
+      if (
+        errorMessage.includes('quota') ||
+        errorMessage.includes('exceeded') ||
+        errorMessage.includes('429') ||
+        errorMessage.includes('too many requests') ||
+        errorMessage.includes('rate_limit') ||
+        errorMessage.includes('rate limit') ||
+        errorMessage.includes('error occurred')
+      ) {
+        // Show a friendly notification for quota issues
+        toast.error('⚠️ API Quota Exhausted! Free API limit reached.', {
+          duration: 6000,
+          style: {
+            background: '#fef3c7',
+            border: '1px solid #f59e0b',
+            color: '#92400e',
+            fontSize: '14px',
+            fontWeight: '500',
+          },
+        });
+
+        setErrorMessage('quota_exhausted');
+
+        // Append error message to chat
+        try {
+          append({
+            role: 'assistant',
+            content: '⚠️ **API Quota Exhausted**\n\nFree API limit reached. Please contact Keshore Venkatachalam Murugesan directly or use preset questions below.',
+          });
+        } catch (appendError) {
+          console.error('Failed to append error message:', appendError);
+        }
+      } else if (errorMessage.includes('network')) {
+        toast.error('Network error. Please check your connection.');
+        setErrorMessage('Network error. Please check your connection.');
+      } else {
+        // Generic or unknown error - also show quota exhausted UI
+        console.error('[CHAT-UI] Generic error:', error);
+        setErrorMessage('quota_exhausted');
+        toast.error('AI service temporarily unavailable. Please try again or use presets.');
+      }
+    },
+    onToolCall: (tool) => {
+      const toolName = tool.toolCall.toolName;
+      console.log('Tool call:', toolName);
+    },
+  });
+
+  console.log('[DEBUG] useChat returns:', Object.keys(chatHelpers));
+
   const {
     messages,
     input,
@@ -100,58 +166,7 @@ const Chat = () => {
     reload,
     addToolResult,
     append,
-  } = useChat({
-    onResponse: (response) => {
-      if (response) {
-        setLoadingSubmit(false);
-      }
-    },
-    onFinish: () => {
-      setLoadingSubmit(false);
-    },
-    onError: (error) => {
-      setLoadingSubmit(false);
-      console.error('Chat error:', error.message, error.cause);
-
-      // Handle specific error types
-      if (error.message?.includes('quota') || error.message?.includes('exceeded') || error.message?.includes('429')) {
-        // Show a friendly notification for quota issues
-        toast.error('⚠️ API Quota Exhausted! Free Gemini API limit reached. Please contact Keshore Venkatachalam Murugesan directly or use preset questions. Thank you for understanding! 🙏', {
-          duration: 6000, // Show for 6 seconds
-          style: {
-            background: '#fef3c7',
-            border: '1px solid #f59e0b',
-            color: '#92400e',
-            fontSize: '14px',
-            fontWeight: '500',
-          },
-        });
-
-        // Set error message state for frontend display
-        setErrorMessage('quota_exhausted');
-
-        // Try to add a chat bubble with the error message
-        try {
-          append({
-            role: 'assistant',
-            content: '⚠️ **API Quota Exhausted**\n\nFree Gemini API limit reached. Please contact Keshore Venkatachalam Murugesan directly or use preset questions below.',
-          });
-        } catch (appendError) {
-          console.error('Failed to append error message:', appendError);
-        }
-      } else if (error.message?.includes('network')) {
-        toast.error('Network error. Please check your connection and try again.');
-        setErrorMessage('Network error. Please check your connection and try again.');
-      } else {
-        toast.error(`Error: ${error.message}`);
-        setErrorMessage(`Error: ${error.message}`);
-      }
-    },
-    onToolCall: (tool) => {
-      const toolName = tool.toolCall.toolName;
-      console.log('Tool call:', toolName);
-    },
-  });
+  } = chatHelpers;
 
   const { currentAIMessage, latestUserMessage, hasActiveTool } = useMemo(() => {
     const latestAIMessageIndex = messages.findLastIndex(
@@ -195,19 +210,67 @@ const Chat = () => {
       )
   );
 
-  //@ts-ignore
-  const submitQuery = (query) => {
-    if (!query.trim() || isToolInProgress) return;
+  const submitQuery = (query: string) => {
+    if (!query?.trim() || isToolInProgress) return;
 
     // Clear any previous error message
     setErrorMessage(null);
 
-    // Check if this is a preset question first
+    const normalizedQuery = query.toLowerCase().trim();
+
+    // 1. Direct match check (original)
     if (presetReplies[query]) {
       const preset = presetReplies[query];
       setPresetReply({ question: query, reply: preset.reply, tool: preset.tool });
       setLoadingSubmit(false);
       return;
+    }
+
+    // 2. Keyword-based intelligent detection to save API quota
+    const keywordMappings = [
+      {
+        keywords: ['hi', 'hello', 'hey', 'greetings', 'greeting', 'good morning', 'good afternoon', 'good evening'],
+        question: 'Greeting'
+      },
+      {
+        keywords: ['who', 'about', 'bio', 'yourself', 'identity', 'profile', 'persona'],
+        question: 'Who are you?'
+      },
+      {
+        keywords: ['skill', 'tech', 'stack', 'experience', 'know', 'language', 'toolkit', 'technical'],
+        question: 'What are your skills?'
+      },
+      {
+        keywords: ['project', 'work', 'built', 'made', 'portfolio', 'proud', 'creation', 'app'],
+        question: 'What projects are you most proud of?'
+      },
+      {
+        keywords: ['resume', 'cv', 'curriculum', 'pdf', 'background', 'qualification'],
+        question: 'Can I see your resume?'
+      },
+      {
+        keywords: ['contact', 'reach', 'email', 'phone', 'social', 'linkedin', 'message', 'call'],
+        question: 'How can I reach you?'
+      },
+      {
+        keywords: ['joke', 'funny', 'laugh', 'humor'],
+        question: 'Tell me a joke'
+      },
+      {
+        keywords: ['opportunity', 'internship', 'job', 'hiring', 'available', 'availability', 'hire'],
+        question: 'Am I available for opportunities?'
+      }
+    ];
+
+    for (const mapping of keywordMappings) {
+      if (mapping.keywords.some(kw => normalizedQuery.includes(kw))) {
+        const preset = presetReplies[mapping.question];
+        if (preset) {
+          setPresetReply({ question: mapping.question, reply: preset.reply, tool: preset.tool });
+          setLoadingSubmit(false);
+          return;
+        }
+      }
     }
 
     setLoadingSubmit(true);
@@ -220,7 +283,7 @@ const Chat = () => {
 
   //@ts-ignore
   const submitQueryToAI = (query) => {
-    if (!query.trim() || isToolInProgress) return;
+    if (!query?.trim() || isToolInProgress) return;
 
     // Clear any previous error message
     setErrorMessage(null);
@@ -257,8 +320,8 @@ const Chat = () => {
   //@ts-ignore
   const onSubmit = (e) => {
     e.preventDefault();
-    if (!input.trim() || isToolInProgress) return;
-    submitQueryToAI(input); // User input should go directly to AI
+    if (!input?.trim() || isToolInProgress) return;
+    submitQuery(input); // Use smart submit to check for keywords/presets first
     setInput('');
   };
 
@@ -365,14 +428,14 @@ const Chat = () => {
                             API Quota Exhausted
                           </h3>
                           <p className="text-xs text-amber-600 dark:text-amber-400">
-                            Free Gemini API limit reached
+                            Free Groq API limit reached
                           </p>
                         </div>
                       </div>
 
                       <div className="text-sm text-amber-800 dark:text-amber-200 space-y-2">
                         <p>
-                          Hi! I'm currently using the <strong>free version</strong> of Google's Gemini API,
+                          Hi! I'm currently using the <strong>free version</strong> of Groq's API,
                           and today's quota has been reached.
                         </p>
 

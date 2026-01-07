@@ -33,7 +33,7 @@ export default function ChatBottombar({
       e.key === 'Enter' &&
       !e.nativeEvent.isComposing &&
       !isToolInProgress &&
-      input.trim()
+      (input?.trim() ?? '')
     ) {
       e.preventDefault();
       handleSubmit(e as unknown as React.FormEvent<HTMLFormElement>);
@@ -57,7 +57,7 @@ export default function ChatBottombar({
           <input
             ref={inputRef}
             type="text"
-            value={input}
+            value={input || ''}
             onChange={handleInputChange}
             onKeyDown={handleKeyPress}
             placeholder={
@@ -69,7 +69,7 @@ export default function ChatBottombar({
 
           <button
             type="submit"
-            disabled={isLoading || !input.trim() || isToolInProgress}
+            disabled={isLoading || !(input?.trim()) || isToolInProgress}
             className="flex items-center justify-center rounded-full bg-[#0171E3] p-2 text-white disabled:opacity-50"
             onClick={(e) => {
               if (isLoading) {

@@ -144,6 +144,9 @@ export default function HelperBoost({
   const [showPresetReply, setShowPresetReply] = useState<string | null>(null);
 
   const handleQuestionClick = (questionKey: string) => {
+    // Hide the buttons after clicking
+    setIsVisible(false);
+
     const question = questions[questionKey as keyof typeof questions];
 
     // Map question keys to preset replies that match our config exactly

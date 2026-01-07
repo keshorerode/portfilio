@@ -8,7 +8,7 @@
     "phone": "",
     "handle": "@keshorevm",
     "bio": "Hey 👋\nI'm Keshore, a Computer Science Engineering student passionate about full-stack development, automation, and data-driven applications. I enjoy building real-world projects using React, Node.js, Firebase, and Python, and I’m constantly improving my skills to become industry-ready.",
-    "avatar": "/avater.png",
+    "avatar": "/profile1.jpg",
     "fallbackAvatar": "https://images.unsplash.com/photo-1610216705422-caa3fcb6d158"
   },
   "education": {
@@ -16,7 +16,7 @@
       "degree": "B.E / B.Tech in Computer Science and Engineering",
       "institution": "Kongu Engineering College",
       "duration": "2022-2026",
-      "cgpa": "",
+      "cgpa": "6.54",
       "graduationDate": "2026"
     }
   },
