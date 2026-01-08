@@ -3,7 +3,7 @@ import { useChat } from 'ai/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { toast } from 'sonner';
 
 // Component imports
@@ -55,7 +55,7 @@ const Avatar = dynamic<AvatarProps>(
             onClick={() => (window.location.href = '/')}
           >
             <img
-              src="/profile1.jpg"
+              src="/avater.png"
               alt="Avatar"
               className="h-full w-full object-cover object-[center] scale-100 rounded-full"
             />
@@ -87,6 +87,25 @@ const Chat = () => {
     tool: string;
   } | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const isAtBottom = useRef(true);
+
+  // Track if scroll is at bottom
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      // Allow a small margin (100px)
+      isAtBottom.current = scrollHeight - scrollTop - clientHeight < 100;
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
+
+
 
   const chatHelpers = useChat({
     onResponse: (response) => {
@@ -99,6 +118,7 @@ const Chat = () => {
     },
     onError: (error) => {
       setLoadingSubmit(false);
+      stop(); // Ensure streaming stops correctly
       console.warn('Chat error:', error);
 
       const errorMessage = error.message?.toLowerCase() || '';
@@ -127,15 +147,10 @@ const Chat = () => {
 
         setErrorMessage('quota_exhausted');
 
-        // Append error message to chat
-        try {
-          append({
-            role: 'assistant',
-            content: '⚠️ **API Quota Exhausted**\n\nFree API limit reached. Please contact Keshore Venkatachalam Murugesan directly or use preset questions below.',
-          });
-        } catch (appendError) {
-          console.error('Failed to append error message:', appendError);
-        }
+        // Cleanup any partial or redundant error messages in history
+        setMessages((prev) =>
+          prev.filter(m => !m.content.toLowerCase().includes('quota exhausted'))
+        );
       } else if (errorMessage.includes('network')) {
         toast.error('Network error. Please check your connection.');
         setErrorMessage('Network error. Please check your connection.');
@@ -200,6 +215,20 @@ const Chat = () => {
     return result;
   }, [messages]);
 
+  // Check if this is the initial empty state (no messages)
+  const isEmptyState =
+    !currentAIMessage && !latestUserMessage && !loadingSubmit && !presetReply && !errorMessage;
+
+  // Simple auto-scroll to bottom
+  useEffect(() => {
+    if (scrollRef.current && !isEmptyState) {
+      scrollRef.current.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: 'smooth',
+      });
+    }
+  }, [messages, loadingSubmit, isEmptyState]);
+
   const isToolInProgress = messages.some(
     (m) =>
       m.role === 'assistant' &&
@@ -224,53 +253,6 @@ const Chat = () => {
       setPresetReply({ question: query, reply: preset.reply, tool: preset.tool });
       setLoadingSubmit(false);
       return;
-    }
-
-    // 2. Keyword-based intelligent detection to save API quota
-    const keywordMappings = [
-      {
-        keywords: ['hi', 'hello', 'hey', 'greetings', 'greeting', 'good morning', 'good afternoon', 'good evening'],
-        question: 'Greeting'
-      },
-      {
-        keywords: ['who', 'about', 'bio', 'yourself', 'identity', 'profile', 'persona'],
-        question: 'Who are you?'
-      },
-      {
-        keywords: ['skill', 'tech', 'stack', 'experience', 'know', 'language', 'toolkit', 'technical'],
-        question: 'What are your skills?'
-      },
-      {
-        keywords: ['project', 'work', 'built', 'made', 'portfolio', 'proud', 'creation', 'app'],
-        question: 'What projects are you most proud of?'
-      },
-      {
-        keywords: ['resume', 'cv', 'curriculum', 'pdf', 'background', 'qualification'],
-        question: 'Can I see your resume?'
-      },
-      {
-        keywords: ['contact', 'reach', 'email', 'phone', 'social', 'linkedin', 'message', 'call'],
-        question: 'How can I reach you?'
-      },
-      {
-        keywords: ['joke', 'funny', 'laugh', 'humor'],
-        question: 'Tell me a joke'
-      },
-      {
-        keywords: ['opportunity', 'internship', 'job', 'hiring', 'available', 'availability', 'hire'],
-        question: 'Am I available for opportunities?'
-      }
-    ];
-
-    for (const mapping of keywordMappings) {
-      if (mapping.keywords.some(kw => normalizedQuery.includes(kw))) {
-        const preset = presetReplies[mapping.question];
-        if (preset) {
-          setPresetReply({ question: mapping.question, reply: preset.reply, tool: preset.tool });
-          setLoadingSubmit(false);
-          return;
-        }
-      }
     }
 
     setLoadingSubmit(true);
@@ -330,9 +312,6 @@ const Chat = () => {
     setLoadingSubmit(false);
   };
 
-  // Check if this is the initial empty state (no messages)
-  const isEmptyState =
-    !currentAIMessage && !latestUserMessage && !loadingSubmit && !presetReply && !errorMessage;
 
   // Calculate header height based on hasActiveTool
   const headerHeight = hasActiveTool ? 100 : 180;
@@ -341,7 +320,7 @@ const Chat = () => {
     <div className="relative h-screen overflow-hidden">
       {/* Fixed Avatar Header with Gradient */}
       <div
-        className="fixed top-0 right-0 left-0 z-50 bg-gradient-to-b from-background via-background/95 to-transparent h-40"
+        className="fixed top-0 right-0 left-0 z-50 bg-background backdrop-blur-md h-auto min-h-[160px]"
       >
         <div className="absolute top-6 right-6">
           <ClientOnly>
@@ -359,25 +338,7 @@ const Chat = () => {
             </ClientOnly>
           </div>
 
-          <AnimatePresence>
-            {latestUserMessage && !currentAIMessage && (
-              <motion.div
-                {...MOTION_CONFIG}
-                className="mx-auto flex max-w-3xl px-4"
-              >
-                <ChatBubble variant="sent">
-                  <ChatBubbleMessage>
-                    <ChatMessageContent
-                      message={latestUserMessage}
-                      isLast={true}
-                      isLoading={false}
-                      reload={() => Promise.resolve(null)}
-                    />
-                  </ChatBubbleMessage>
-                </ChatBubble>
-              </motion.div>
-            )}
-          </AnimatePresence>
+
         </div>
       </div>
 
@@ -385,10 +346,11 @@ const Chat = () => {
       <div className="container mx-auto flex h-full max-w-3xl flex-col">
         {/* Scrollable Chat Content */}
         <div
+          ref={scrollRef}
           className="flex-1 overflow-y-auto px-2 pb-4 no-scrollbar"
           style={{ paddingTop: `${headerHeight}px` }}
         >
-          <AnimatePresence mode="wait">
+          <AnimatePresence mode="popLayout">
             {isEmptyState ? (
               <motion.div
                 key="landing"
@@ -400,111 +362,128 @@ const Chat = () => {
                   handlePresetReply={handlePresetReply}
                 />
               </motion.div>
-            ) : presetReply ? (
-              <div className="pb-4">
-                <PresetReply
-                  question={presetReply.question}
-                  reply={presetReply.reply}
-                  tool={presetReply.tool}
-                  onGetAIResponse={handleGetAIResponse}
-                  onClose={() => setPresetReply(null)}
-                />
-              </div>
-            ) : errorMessage ? (
-              <motion.div
-                key="error"
-                {...MOTION_CONFIG}
-                className="px-4 pt-4"
-              >
-                <ChatBubble variant="received">
-                  <ChatBubbleMessage className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
-                    <div className="space-y-4 p-4">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="h-10 w-10 rounded-full bg-amber-500 flex items-center justify-center">
-                          <span className="text-white text-lg">⚠️</span>
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-amber-800 dark:text-amber-300 text-sm">
-                            API Quota Exhausted
-                          </h3>
-                          <p className="text-xs text-amber-600 dark:text-amber-400">
-                            Free Groq API limit reached
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="text-sm text-amber-800 dark:text-amber-200 space-y-2">
-                        <p>
-                          Hi! I'm currently using the <strong>free version</strong> of Groq's API,
-                          and today's quota has been reached.
-                        </p>
-
-                        <div className="bg-amber-100 dark:bg-amber-900/30 p-3 rounded-lg mt-3">
-                          <p className="font-medium mb-2">What you can do:</p>
-                          <ul className="list-disc list-inside space-y-1 text-xs">
-                            <li>Contact me directly for a live demo</li>
-                            <li>Use the preset questions below for instant responses</li>
-                            <li>Come back tomorrow when the quota resets</li>
-                          </ul>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-2 mt-4">
-                        <button
-                          onClick={() => {
-                            setErrorMessage(null);
-                            const preset = presetReplies["How can I reach you?"];
-                            if (preset) {
-                              setPresetReply({
-                                question: "How can I reach you?",
-                                reply: preset.reply,
-                                tool: preset.tool
-                              });
-                            }
-                          }}
-                          className="px-4 py-2 bg-amber-500 text-white text-sm rounded-md hover:bg-amber-600 transition-colors font-medium"
-                        >
-                          Contact me
-                        </button>
-                        <button
-                          onClick={() => {
-                            setErrorMessage(null);
-                            window.location.href = '/';
-                          }}
-                          className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-                        >
-                          Use Presets
-                        </button>
-                      </div>
-
-                      <p className="text-xs text-amber-600 dark:text-amber-400 text-center mt-3">
-                        Thank you for your patience! 🙏
-                      </p>
-                    </div>
-                  </ChatBubbleMessage>
-                </ChatBubble>
-              </motion.div>
-            ) : currentAIMessage ? (
-              <div className="pb-4">
-                <SimplifiedChatView
-                  message={currentAIMessage}
-                  isLoading={isLoading}
-                  reload={reload}
-                  addToolResult={addToolResult}
-                />
-              </div>
             ) : (
-              loadingSubmit && (
-                <motion.div
-                  key="loading"
-                  {...MOTION_CONFIG}
-                  className="px-4 pt-18"
-                >
-                  <ChatBubble variant="received">
-                    <ChatBubbleMessage isLoading />
-                  </ChatBubble>
-                </motion.div>
-              )
+              <div className="flex flex-col gap-6 py-4">
+                {messages.map((m, index) => (
+                  <motion.div
+                    key={m.id || index}
+                    {...MOTION_CONFIG}
+                    className="flex flex-col gap-2"
+                  >
+                    {m.role === 'user' ? (
+                      <div className="flex justify-end px-4">
+                        <ChatBubble variant="sent">
+                          <ChatBubbleMessage>
+                            <ChatMessageContent
+                              message={m}
+                              isLast={index === messages.length - 1}
+                              isLoading={false}
+                            />
+                          </ChatBubbleMessage>
+                        </ChatBubble>
+                      </div>
+                    ) : (
+                      <div className="w-full">
+                        <SimplifiedChatView
+                          message={m}
+                          isLoading={isLoading && index === messages.length - 1}
+                          reload={reload}
+                          addToolResult={addToolResult}
+                        />
+                      </div>
+                    )}
+                  </motion.div>
+                ))}
+
+                {/* Floating States (Preset Reply / Error / Loading) */}
+                {presetReply && (
+                  <div className="pb-4">
+                    <PresetReply
+                      question={presetReply.question}
+                      reply={presetReply.reply}
+                      tool={presetReply.tool}
+                      onGetAIResponse={handleGetAIResponse}
+                      onClose={() => setPresetReply(null)}
+                    />
+                  </div>
+                )}
+
+                {errorMessage && (
+                  <motion.div
+                    key="error"
+                    {...MOTION_CONFIG}
+                    className="px-4"
+                  >
+                    <ChatBubble variant="received">
+                      <ChatBubbleMessage className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+                        {/* Error content remains the same... */}
+                        <div className="space-y-4 p-4">
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="h-10 w-10 rounded-full bg-amber-500 flex items-center justify-center">
+                              <span className="text-white text-lg">⚠️</span>
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-amber-800 dark:text-amber-300 text-sm">
+                                API Quota Exhausted
+                              </h3>
+                              <p className="text-xs text-amber-600 dark:text-amber-400">
+                                Free API limit reached
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="text-sm text-amber-800 dark:text-amber-200 space-y-2">
+                            <p>
+                              Hi! I'm currently using a <strong>free version</strong> of the AI API,
+                              and the today's quota has been reached.
+                            </p>
+                          </div>
+
+                          <div className="flex gap-2 mt-4">
+                            <button
+                              onClick={() => {
+                                setErrorMessage(null);
+                                const preset = presetReplies["How can I reach you?"];
+                                if (preset) {
+                                  setPresetReply({
+                                    question: "How can I reach you?",
+                                    reply: preset.reply,
+                                    tool: preset.tool
+                                  });
+                                }
+                              }}
+                              className="px-4 py-2 bg-amber-500 text-white text-sm rounded-md hover:bg-amber-600 transition-colors font-medium"
+                            >
+                              Contact me
+                            </button>
+                            <button
+                              onClick={() => {
+                                setErrorMessage(null);
+                                window.location.href = '/';
+                              }}
+                              className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                            >
+                              Use Presets
+                            </button>
+                          </div>
+                        </div>
+                      </ChatBubbleMessage>
+                    </ChatBubble>
+                  </motion.div>
+                )}
+
+                {loadingSubmit && (
+                  <motion.div
+                    key="loading"
+                    {...MOTION_CONFIG}
+                    className="px-4"
+                  >
+                    <ChatBubble variant="received">
+                      <ChatBubbleMessage isLoading />
+                    </ChatBubble>
+                  </motion.div>
+                )}
+              </div>
             )}
           </AnimatePresence>
         </div>

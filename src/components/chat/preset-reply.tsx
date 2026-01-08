@@ -13,6 +13,8 @@ import Skills from '@/components/skills';
 import { Contact } from '@/components/contact';
 import Resume from '@/components/resume';
 import AvailabilityCard from '@/components/AvailabilityCard';
+import { data as projectsData } from '@/components/projects/ConfigData';
+import { Card } from '@/components/projects/apple-cards-carousel';
 
 interface PresetReplyProps {
   question: string;
@@ -32,6 +34,18 @@ export function PresetReply({ question, reply, tool, onGetAIResponse, onClose }:
 
   // Render the same components as AI responses for better consistency
   const renderPresetComponent = () => {
+    if (tool.startsWith('getProject:')) {
+      const projectTitle = tool.replace('getProject:', '');
+      const project = projectsData.find(p => p.title === projectTitle);
+      if (project) {
+        return (
+          <div className="w-full flex justify-center mb-6">
+            <Card card={project} index={0} layout={true} />
+          </div>
+        );
+      }
+    }
+
     switch (tool) {
       case 'getPresentation':
         return (

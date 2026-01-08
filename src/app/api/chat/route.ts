@@ -1,3 +1,4 @@
+import { google } from '@ai-sdk/google';
 import { createOpenAI } from '@ai-sdk/openai';
 import { streamText } from 'ai';
 
@@ -12,10 +13,16 @@ import { getSkills } from './tools/getSkills';
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
-  const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) {
-    console.error('[CHAT-API] Missing GROQ_API_KEY');
-    return new Response(JSON.stringify({ error: 'Missing API key' }), {
+  const groqApiKey = process.env.GROQ_API_KEY;
+  const googleApiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+  const openRouterApiKey = process.env.OPENROUTER_API_KEY;
+  const xaiApiKey = process.env.XAI_API_KEY || process.env.GROK_API_KEY;
+
+  console.log('[CHAT-API] Multi-Model Load Balancing via OpenRouter Active');
+
+  if (!groqApiKey && !googleApiKey && !openRouterApiKey && !xaiApiKey) {
+    console.error('[CHAT-API] Missing API keys');
+    return new Response(JSON.stringify({ error: 'Missing API keys' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     });
@@ -23,7 +30,6 @@ export async function POST(req: Request) {
 
   try {
     const { messages } = await req.json();
-    console.log('[CHAT-API] Messages count:', messages?.length);
 
     const tools = {
       getProjects,
@@ -34,20 +40,76 @@ export async function POST(req: Request) {
       getInternship,
     };
 
-    console.log('[CHAT-API] Calling Groq llama-3.1-8b-instant...');
+    let model;
 
-    // Use OpenAI-compatible client with Groq's base URL
-    const groq = createOpenAI({
-      baseURL: 'https://api.groq.com/openai/v1',
-      apiKey: apiKey,
-    });
+    // We prioritize OpenRouter for "All LLM" load balancing as requested
+    if (openRouterApiKey) {
+      console.log('[CHAT-API] Using OpenRouter with multi-model fallback...');
+      const openrouter = createOpenAI({
+        baseURL: 'https://openrouter.ai/api/v1',
+        apiKey: openRouterApiKey,
+        headers: {
+          'HTTP-Referer': 'https://keshore-portfolio.vercel.app',
+          'X-Title': 'Keshore Portfolio',
+        },
+      });
+
+      const result = streamText({
+        model: openrouter('google/gemini-2.0-flash-001'),
+        experimental_providerMetadata: {
+          openai: {
+            extraBody: {
+              models: [
+                'google/gemini-2.0-flash-001',
+                'anthropic/claude-3.5-haiku',
+                'x-ai/grok-2-1212',
+                'meta-llama/llama-3.3-70b-instruct',
+                'deepseek/deepseek-chat',
+                'qwen/qwen-2.5-72b-instruct',
+                'google/gemini-flash-1.5',
+                'openrouter/auto',
+              ],
+              route: 'fallback',
+            },
+          },
+        },
+        messages,
+        tools,
+        system: SYSTEM_PROMPT.content,
+        maxSteps: 5,
+        maxRetries: 2,
+      });
+
+      return result.toDataStreamResponse();
+    }
+
+    // Fallback to direct xAI if OpenRouter key is missing
+    if (xaiApiKey) {
+      console.log('[CHAT-API] Falling back to direct xAI...');
+      const xai = createOpenAI({
+        baseURL: 'https://api.x.ai/v1',
+        apiKey: xaiApiKey,
+      });
+      model = xai('grok-2-latest');
+    } else if (googleApiKey) {
+      console.log('[CHAT-API] Falling back to direct Google Gemini...');
+      model = google('gemini-1.5-flash');
+    } else {
+      console.log('[CHAT-API] Falling back to direct Groq...');
+      const groq = createOpenAI({
+        baseURL: 'https://api.groq.com/openai/v1',
+        apiKey: groqApiKey,
+      });
+      model = groq('llama-3.1-8b-instant');
+    }
 
     const result = streamText({
-      model: groq('llama-3.1-8b-instant'),
+      model,
       messages,
       tools,
       system: SYSTEM_PROMPT.content,
-      maxSteps: 3,
+      maxSteps: 5,
+      maxRetries: 2,
     });
 
     return result.toDataStreamResponse();
@@ -56,9 +118,8 @@ export async function POST(req: Request) {
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
-    // Check for specific OpenAI API errors
-    if (errorMessage.includes('quota') || errorMessage.includes('429') || errorMessage.includes('insufficient_quota')) {
-      return new Response(JSON.stringify({ error: 'API quota exceeded' }), {
+    if (errorMessage.includes('quota') || errorMessage.includes('429')) {
+      return new Response(JSON.stringify({ error: 'All primary and fallback models hit quota limits. Please try again later.' }), {
         status: 429,
         headers: { 'Content-Type': 'application/json' }
       });
