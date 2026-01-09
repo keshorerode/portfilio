@@ -170,20 +170,22 @@ export const Carousel = ({
             ))}
           </div>
         </div>
-        <div className="mr-10 flex justify-end gap-2 md:mr-20">
+        <div className="mr-6 md:mr-20 flex justify-end gap-3 md:gap-4 mt-4">
           <button
-            className="relative z-40 flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 disabled:opacity-50"
+            className="group relative z-40 flex h-11 w-11 items-center justify-center rounded-full bg-muted/60 hover:bg-muted transition-all disabled:opacity-30 border border-border focus:ring-2 focus:ring-zinc-400 focus:outline-none"
             onClick={scrollLeft}
             disabled={!canScrollLeft}
+            aria-label="Scroll left"
           >
-            <IconArrowNarrowLeft className="h-6 w-6 text-gray-500" />
+            <IconArrowNarrowLeft className="h-6 w-6 text-foreground group-hover:-translate-x-0.5 transition-transform" />
           </button>
           <button
-            className="relative z-40 flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 disabled:opacity-50"
+            className="group relative z-40 flex h-11 w-11 items-center justify-center rounded-full bg-muted/60 hover:bg-muted transition-all disabled:opacity-30 border border-border focus:ring-2 focus:ring-[#0171E3] focus:outline-none"
             onClick={scrollRight}
             disabled={!canScrollRight}
+            aria-label="Scroll right"
           >
-            <IconArrowNarrowRight className="h-6 w-6 text-gray-500" />
+            <IconArrowNarrowRight className="h-6 w-6 text-foreground group-hover:translate-x-0.5 transition-transform" />
           </button>
         </div>
       </div>
@@ -239,47 +241,52 @@ export const Card = ({
     <>
       <AnimatePresence>
         {open && (
-          <div className="fixed inset-0 z-52 h-screen overflow-auto">
+          <div className="fixed inset-0 z-50 h-screen overflow-auto">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 h-full w-full bg-black/80 backdrop-blur-lg"
+              className="fixed inset-0 h-full w-full bg-black/80 backdrop-blur-xl"
             />
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
               ref={containerRef}
               layoutId={layout ? `card-${card.title}` : undefined}
-              className="relative z-[60] mx-auto my-10 h-fit max-w-5xl rounded-3xl bg-white font-sans dark:bg-neutral-900"
+              className="relative z-[60] mx-auto my-10 h-fit max-w-5xl rounded-[2.5rem] bg-white font-sans dark:bg-neutral-900 shadow-2xl overflow-hidden"
             >
               {/* Sticky close button */}
-              <div className="sticky top-4 z-52 flex justify-end px-8 pt-8 md:px-14 md:pt-8">
+              <div className="absolute top-6 right-6 z-50">
                 <button
-                  className="flex h-8 w-8 items-center justify-center rounded-full bg-black/90 shadow-md dark:bg-white/90"
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md transition-colors"
                   onClick={handleClose}
+                  aria-label="Close modal"
                 >
-                  <IconX className="h-6 w-6 text-neutral-100 dark:text-neutral-900" />
+                  <IconX className="h-6 w-6 text-white" />
                 </button>
               </div>
 
               {/* Header section with consistent padding */}
-              <div className="relative px-8 pt-2 pb-0 md:px-14">
-                <div>
+              <div className="relative p-8 md:p-14 pb-0">
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 }}
+                >
                   <motion.p
                     layoutId={layout ? `category-${card.category}-${card.title}` : undefined}
-                    className="text-base font-medium text-black dark:text-white"
+                    className="text-sm md:text-base font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400"
                   >
                     {card.category}
                   </motion.p>
                   <motion.p
                     layoutId={layout ? `title-${card.title}` : undefined}
-                    className="mt-4 text-2xl font-semibold text-neutral-700 md:text-5xl dark:text-white"
+                    className="mt-2 text-3xl font-bold text-neutral-800 md:text-6xl dark:text-white leading-tight"
                   >
                     {card.title}
                   </motion.p>
-                </div>
+                </motion.div>
               </div>
 
               {/* Content with consistent padding */}
@@ -291,29 +298,40 @@ export const Card = ({
       <motion.button
         layoutId={layout ? `card-${card.title}` : undefined}
         onClick={handleOpen}
-        className="relative z-10 flex h-48 w-80 flex-col items-start justify-start overflow-hidden rounded-3xl bg-gray-100 dark:bg-neutral-900"
+        whileHover={{
+          scale: 1.02,
+          boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)"
+        }}
+        whileTap={{ scale: 0.98 }}
+        className="relative z-10 flex h-64 md:h-[28rem] w-72 md:w-[22rem] flex-col items-start justify-start overflow-hidden rounded-[2rem] bg-gray-100 dark:bg-neutral-900 group shadow-lg transition-all duration-300"
+        aria-label={`View project: ${card.title}`}
       >
-        <div className="absolute inset-x-0 top-0 z-30 h-full cursor-pointer bg-gradient-to-b from-black hover:scale-110 via-transparent to-transparent" />
-        {/*<div className="absolute inset-0 z-20 cursor-pointer bg-black/20 hover:bg-black/2" />*/}
-        <div className="relative z-40 p-8">
-          <motion.p
-            layoutId={layout ? `category-${card.category}-${card.title}` : undefined}
-            className="text-left font-sans text-sm font-medium text-white md:text-base"
-          >
-            {card.category}
-          </motion.p>
-          <motion.p
-            layoutId={layout ? `title-${card.title}` : undefined}
-            className="max-w-xs text-left font-sans text-xl font-semibold [text-wrap:balance] text-white md:text-3xl"
-          >
-            {card.title}
-          </motion.p>
+        <div className="absolute inset-x-0 top-0 z-30 h-full cursor-pointer bg-gradient-to-b from-black/70 via-black/10 to-transparent transition-opacity group-hover:opacity-80" />
+        <div className="relative z-40 p-6 md:p-8 w-full flex flex-col items-start h-full justify-between">
+          <div>
+            <motion.p
+              layoutId={layout ? `category-${card.category}-${card.title}` : undefined}
+              className="text-left font-sans text-xs md:text-sm font-bold uppercase tracking-widest text-white/80"
+            >
+              {card.category}
+            </motion.p>
+            <motion.p
+              layoutId={layout ? `title-${card.title}` : undefined}
+              className="mt-2 text-left font-sans text-xl md:text-3xl font-bold [text-wrap:balance] text-white"
+            >
+              {card.title}
+            </motion.p>
+          </div>
+
+          <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-xs md:text-sm font-semibold opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-4 group-hover:translate-y-0">
+            View Details <IconArrowNarrowRight className="h-4 w-4" />
+          </div>
         </div>
         <BlurImage
           src={card.src}
           alt={card.title}
           fill
-          className="absolute inset-0 z-10 object-cover"
+          className="absolute inset-0 z-10 object-cover transition-transform duration-500 group-hover:scale-110"
         />
       </motion.button>
     </>

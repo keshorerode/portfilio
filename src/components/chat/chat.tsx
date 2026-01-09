@@ -1,6 +1,7 @@
 'use client';
 import { useChat } from 'ai/react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { X } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
 import React, { useEffect, useMemo, useState, useRef } from 'react';
@@ -97,15 +98,12 @@ const Chat = () => {
 
     const handleScroll = () => {
       const { scrollTop, scrollHeight, clientHeight } = container;
-      // Allow a small margin (100px)
       isAtBottom.current = scrollHeight - scrollTop - clientHeight < 100;
     };
 
     container.addEventListener('scroll', handleScroll);
     return () => container.removeEventListener('scroll', handleScroll);
   }, []);
-
-
 
   const chatHelpers = useChat({
     onResponse: (response) => {
@@ -118,12 +116,10 @@ const Chat = () => {
     },
     onError: (error) => {
       setLoadingSubmit(false);
-      stop(); // Ensure streaming stops correctly
+      stop();
       console.warn('Chat error:', error);
-
       const errorMessage = error.message?.toLowerCase() || '';
 
-      // Handle specific error types (Groq, Gemini, OpenAI rate limits)
       if (
         errorMessage.includes('quota') ||
         errorMessage.includes('exceeded') ||
@@ -133,7 +129,6 @@ const Chat = () => {
         errorMessage.includes('rate limit') ||
         errorMessage.includes('error occurred')
       ) {
-        // Show a friendly notification for quota issues
         toast.error('⚠️ API Quota Exhausted! Free API limit reached.', {
           duration: 6000,
           style: {
@@ -144,10 +139,7 @@ const Chat = () => {
             fontWeight: '500',
           },
         });
-
         setErrorMessage('quota_exhausted');
-
-        // Cleanup any partial or redundant error messages in history
         setMessages((prev) =>
           prev.filter(m => !m.content.toLowerCase().includes('quota exhausted'))
         );
@@ -155,8 +147,6 @@ const Chat = () => {
         toast.error('Network error. Please check your connection.');
         setErrorMessage('Network error. Please check your connection.');
       } else {
-        // Generic or unknown error - also show quota exhausted UI
-        console.error('[CHAT-UI] Generic error:', error);
         setErrorMessage('quota_exhausted');
         toast.error('AI service temporarily unavailable. Please try again or use presets.');
       }
@@ -166,8 +156,6 @@ const Chat = () => {
       console.log('Tool call:', toolName);
     },
   });
-
-  console.log('[DEBUG] useChat returns:', Object.keys(chatHelpers));
 
   const {
     messages,
@@ -183,29 +171,60 @@ const Chat = () => {
     append,
   } = chatHelpers;
 
+  // Haptic feedback helper
+  const triggerHaptic = () => {
+    if (typeof window !== 'undefined' && window.navigator && window.navigator.vibrate) {
+      window.navigator.vibrate(10);
+    }
+  };
+
+  // Clear chat helper
+  const clearChat = () => {
+    setMessages([]);
+    setInput('');
+    setPresetReply(null);
+    setErrorMessage(null);
+    setAutoSubmitted(false);
+    stop();
+    toast.success("Chat cleared");
+  };
+
+  // Keyboard Shortcuts Listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isInputFocused = document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA';
+
+      if (e.key === '?' && !isInputFocused) {
+        e.preventDefault();
+        toast.info("Keyboard Shortcuts", {
+          description: "Enter: Send Message | Esc: Clear Chat | ?: Show Help",
+          duration: 4000,
+        });
+      }
+
+      if (e.key === 'Escape') {
+        clearChat();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [setInput, setMessages, setPresetReply, setErrorMessage, setAutoSubmitted, stop]);
+
   const { currentAIMessage, latestUserMessage, hasActiveTool } = useMemo(() => {
-    const latestAIMessageIndex = messages.findLastIndex(
-      (m) => m.role === 'assistant'
-    );
-    const latestUserMessageIndex = messages.findLastIndex(
-      (m) => m.role === 'user'
-    );
+    const latestAIMessageIndex = messages.findLastIndex((m) => m.role === 'assistant');
+    const latestUserMessageIndex = messages.findLastIndex((m) => m.role === 'user');
 
     const result = {
-      currentAIMessage:
-        latestAIMessageIndex !== -1 ? messages[latestAIMessageIndex] : null,
-      latestUserMessage:
-        latestUserMessageIndex !== -1 ? messages[latestUserMessageIndex] : null,
+      currentAIMessage: latestAIMessageIndex !== -1 ? messages[latestAIMessageIndex] : null,
+      latestUserMessage: latestUserMessageIndex !== -1 ? messages[latestUserMessageIndex] : null,
       hasActiveTool: false,
     };
 
     if (result.currentAIMessage) {
-      result.hasActiveTool =
-        result.currentAIMessage.parts?.some(
-          (part) =>
-            part.type === 'tool-invocation' &&
-            part.toolInvocation?.state === 'result'
-        ) || false;
+      result.hasActiveTool = result.currentAIMessage.parts?.some(
+        (part) => part.type === 'tool-invocation' && part.toolInvocation?.state === 'result'
+      ) || false;
     }
 
     if (latestAIMessageIndex < latestUserMessageIndex) {
@@ -215,11 +234,8 @@ const Chat = () => {
     return result;
   }, [messages]);
 
-  // Check if this is the initial empty state (no messages)
-  const isEmptyState =
-    !currentAIMessage && !latestUserMessage && !loadingSubmit && !presetReply && !errorMessage;
+  const isEmptyState = !currentAIMessage && !latestUserMessage && !loadingSubmit && !presetReply && !errorMessage;
 
-  // Simple auto-scroll to bottom
   useEffect(() => {
     if (scrollRef.current && !isEmptyState) {
       scrollRef.current.scrollTo({
@@ -230,24 +246,16 @@ const Chat = () => {
   }, [messages, loadingSubmit, isEmptyState]);
 
   const isToolInProgress = messages.some(
-    (m) =>
-      m.role === 'assistant' &&
-      m.parts?.some(
-        (part) =>
-          part.type === 'tool-invocation' &&
-          part.toolInvocation?.state !== 'result'
-      )
+    (m) => m.role === 'assistant' && m.parts?.some(
+      (part) => part.type === 'tool-invocation' && part.toolInvocation?.state !== 'result'
+    )
   );
 
   const submitQuery = (query: string) => {
     if (!query?.trim() || isToolInProgress) return;
-
-    // Clear any previous error message
+    triggerHaptic();
     setErrorMessage(null);
 
-    const normalizedQuery = query.toLowerCase().trim();
-
-    // 1. Direct match check (original)
     if (presetReplies[query]) {
       const preset = presetReplies[query];
       setPresetReply({ question: query, reply: preset.reply, tool: preset.tool });
@@ -256,39 +264,27 @@ const Chat = () => {
     }
 
     setLoadingSubmit(true);
-    setPresetReply(null); // Clear any preset reply when submitting new query
-    append({
-      role: 'user',
-      content: query,
-    });
+    setPresetReply(null);
+    append({ role: 'user', content: query });
   };
 
-  //@ts-ignore
-  const submitQueryToAI = (query) => {
+  const submitQueryToAI = (query: string) => {
     if (!query?.trim() || isToolInProgress) return;
-
-    // Clear any previous error message
+    triggerHaptic();
     setErrorMessage(null);
-
-    // Force AI response, bypass preset checking
     setLoadingSubmit(true);
     setPresetReply(null);
-    append({
-      role: 'user',
-      content: query,
-    });
+    append({ role: 'user', content: query });
   };
 
-  //@ts-ignore
-  const handlePresetReply = (question, reply, tool) => {
+  const handlePresetReply = (question: string, reply: string, tool: string) => {
     setPresetReply({ question, reply, tool });
     setLoadingSubmit(false);
   };
 
-  //@ts-ignore
-  const handleGetAIResponse = (question, tool) => {
+  const handleGetAIResponse = (question: string) => {
     setPresetReply(null);
-    submitQueryToAI(question); // Use the new function that bypasses presets
+    submitQueryToAI(question);
   };
 
   useEffect(() => {
@@ -299,11 +295,10 @@ const Chat = () => {
     }
   }, [initialQuery, autoSubmitted]);
 
-  //@ts-ignore
-  const onSubmit = (e) => {
+  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!input?.trim() || isToolInProgress) return;
-    submitQuery(input); // Use smart submit to check for keywords/presets first
+    submitQuery(input);
     setInput('');
   };
 
@@ -314,7 +309,7 @@ const Chat = () => {
 
 
   // Calculate header height based on hasActiveTool
-  const headerHeight = hasActiveTool ? 100 : 180;
+  const headerHeight = hasActiveTool ? 100 : 200;
 
   return (
     <div className="relative h-screen overflow-hidden">
@@ -354,7 +349,7 @@ const Chat = () => {
             {isEmptyState ? (
               <motion.div
                 key="landing"
-                className="flex min-h-full items-center justify-center"
+                className="flex min-h-full items-start justify-center pt-12 md:pt-16"
                 {...MOTION_CONFIG}
               >
                 <ChatLanding
@@ -415,59 +410,70 @@ const Chat = () => {
                     className="px-4"
                   >
                     <ChatBubble variant="received">
-                      <ChatBubbleMessage className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
-                        {/* Error content remains the same... */}
-                        <div className="space-y-4 p-4">
-                          <div className="flex items-center gap-3 mb-3">
-                            <div className="h-10 w-10 rounded-full bg-amber-500 flex items-center justify-center">
-                              <span className="text-white text-lg">⚠️</span>
-                            </div>
-                            <div>
-                              <h3 className="font-semibold text-amber-800 dark:text-amber-300 text-sm">
-                                API Quota Exhausted
-                              </h3>
-                              <p className="text-xs text-amber-600 dark:text-amber-400">
-                                Free API limit reached
-                              </p>
-                            </div>
-                          </div>
+                      <div className="flex flex-col gap-1 w-full relative">
+                        <span className="text-[10px] font-medium text-amber-600 dark:text-amber-400 ml-3 mb-1 uppercase tracking-wider flex items-center gap-1">
+                          <span className="h-1 w-1 rounded-full bg-amber-500 animate-pulse" />
+                          System Alert
+                        </span>
 
-                          <div className="text-sm text-amber-800 dark:text-amber-200 space-y-2">
-                            <p>
-                              Hi! I'm currently using a <strong>free version</strong> of the AI API,
-                              and the today's quota has been reached.
-                            </p>
-                          </div>
+                        <ChatBubbleMessage className="bg-amber-50/80 dark:bg-amber-900/10 border border-amber-200/50 dark:border-amber-800/30 backdrop-blur-sm shadow-sm">
+                          <button
+                            onClick={() => setErrorMessage(null)}
+                            className="absolute top-2 right-2 p-1 text-amber-400 hover:text-amber-600 transition-colors"
+                            aria-label="Dismiss error"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
 
-                          <div className="flex gap-2 mt-4">
-                            <button
-                              onClick={() => {
-                                setErrorMessage(null);
-                                const preset = presetReplies["How can I reach you?"];
-                                if (preset) {
-                                  setPresetReply({
-                                    question: "How can I reach you?",
-                                    reply: preset.reply,
-                                    tool: preset.tool
-                                  });
-                                }
-                              }}
-                              className="px-4 py-2 bg-amber-500 text-white text-sm rounded-md hover:bg-amber-600 transition-colors font-medium"
-                            >
-                              Contact me
-                            </button>
-                            <button
-                              onClick={() => {
-                                setErrorMessage(null);
-                                window.location.href = '/';
-                              }}
-                              className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-                            >
-                              Use Presets
-                            </button>
+                          <div className="space-y-4 p-2">
+                            <div className="flex items-center gap-4">
+                              <div className="h-12 w-12 rounded-2xl bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center shrink-0 border border-amber-200 dark:border-amber-800">
+                                <div className="h-8 w-8 rounded-full bg-amber-500 flex items-center justify-center">
+                                  <span className="text-white text-lg">!</span>
+                                </div>
+                              </div>
+                              <div>
+                                <h3 className="font-bold text-amber-900 dark:text-amber-200 text-sm md:text-md">
+                                  {errorMessage === 'quota_exhausted' ? 'API Quota Limit Reached' : 'Connection Interrupted'}
+                                </h3>
+                                <p className="text-xs text-amber-700/70 dark:text-amber-400/70">
+                                  {errorMessage === 'quota_exhausted' ? 'The daily free limit for the AI model has been exceeded.' : 'We encountered a problem reaching the AI server.'}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="text-xs md:text-sm text-amber-800 dark:text-amber-200 font-medium bg-white/40 dark:bg-black/20 p-3 rounded-xl border border-amber-200/30 dark:border-amber-800/20 shadow-inner">
+                              {errorMessage === 'quota_exhausted' ? (
+                                "I'm currently running on a limited free tier. Don't worry! You can still explore my background, projects, and contact info using the button below."
+                              ) : (
+                                "Please check your internet connection and try again. You can also use my preset quick questions."
+                              )}
+                            </div>
+
+                            <div className="flex flex-wrap gap-2 pt-2">
+                              <button
+                                onClick={() => {
+                                  setErrorMessage(null);
+                                  const preset = presetReplies["How can I reach you?"];
+                                  if (preset) handlePresetReply("How can I reach you?", preset.reply, preset.tool);
+                                }}
+                                className="px-4 py-2 bg-amber-500 text-white text-xs md:text-sm rounded-xl hover:bg-amber-600 transition-all font-semibold shadow-md active:scale-95 flex items-center gap-2"
+                              >
+                                Get Contact Info
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setErrorMessage(null);
+                                  window.location.href = '/';
+                                }}
+                                className="px-4 py-2 bg-white/60 dark:bg-white/10 text-amber-900 dark:text-amber-100 text-xs md:text-sm rounded-xl hover:bg-white/80 dark:hover:bg-white/20 transition-all border border-amber-200 dark:border-amber-800 flex items-center gap-2 active:scale-95"
+                              >
+                                Return Home
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                      </ChatBubbleMessage>
+                        </ChatBubbleMessage>
+                      </div>
                     </ChatBubble>
                   </motion.div>
                 )}
@@ -479,7 +485,13 @@ const Chat = () => {
                     className="px-4"
                   >
                     <ChatBubble variant="received">
-                      <ChatBubbleMessage isLoading />
+                      <div className="flex flex-col gap-1 w-full">
+                        <span className="text-[10px] font-medium text-muted-foreground ml-3 mb-1 uppercase tracking-wider">Assistant</span>
+                        <div className="flex items-center gap-3">
+                          <ChatBubbleMessage isLoading />
+                          <span className="text-xs text-muted-foreground animate-pulse italic">Thinking...</span>
+                        </div>
+                      </div>
                     </ChatBubble>
                   </motion.div>
                 )}
@@ -489,7 +501,7 @@ const Chat = () => {
         </div>
 
         {/* Fixed Bottom Bar */}
-        <div className="sticky bottom-0 bg-background px-2 pt-3 md:px-0 md:pb-4">
+        <div className="sticky bottom-0 bg-background px-2 pt-2 md:px-0">
           <div className="relative flex flex-col items-center gap-3">
             <HelperBoost
               submitQuery={submitQuery}
@@ -498,11 +510,13 @@ const Chat = () => {
             />
             <ChatBottombar
               input={input}
+              hasMessages={messages.length > 0 || !!presetReply}
               handleInputChange={handleInputChange}
               handleSubmit={onSubmit}
               isLoading={isLoading}
               stop={handleStop}
               isToolInProgress={isToolInProgress}
+              clearChat={clearChat}
             />
           </div>
         </div>

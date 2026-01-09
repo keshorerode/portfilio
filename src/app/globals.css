@@ -114,11 +114,52 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Micro-interactions */
+button:hover {
+  transform: translateY(-1px);
+}
+
+button:active {
+  transform: translateY(0px) scale(0.98);
+}
+
+/* Mobile-first approach & Touch Targets */
+@media (max-width: 640px) {
+
+  /* Increase touch target sizes */
+  button,
+  [role="button"],
+  input {
+    min-height: 44px;
+  }
+
+  /* Message bubbles on mobile */
+  .message-content {
+    max-width: 92% !important;
+    font-size: 14px;
+  }
+
+  /* Scrollbar behavior for mobile */
+  * {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Fluid typography for headers */
+h1 {
+  font-size: clamp(1.5rem, 5vw, 2rem);
+}
+
+h2 {
+  font-size: clamp(1.25rem, 4vw, 1.75rem);
 }
 
 html,

@@ -140,7 +140,7 @@ export function PresetReply({ question, reply, tool, onGetAIResponse, onClose }:
                         onClick={handleGetAIResponse}
                         variant="outline"
                         size="sm"
-                        className="text-xs bg-gradient-to-r from-purple-500 to-blue-500 text-white border-0 hover:from-purple-600 hover:to-blue-600 hover:text-white shadow-sm transition-all duration-200 hover:shadow-md self-start sm:self-auto"
+                        className="text-xs bg-zinc-900 dark:bg-zinc-100 text-white dark:text-black border-0 hover:bg-zinc-800 dark:hover:bg-zinc-200 shadow-sm transition-all duration-200 hover:shadow-md self-start sm:self-auto"
                       >
                         <Sparkles className="w-3 h-3 mr-1.5 flex-shrink-0" />
                         Get AI Response
@@ -286,7 +286,7 @@ export function PresetReply({ question, reply, tool, onGetAIResponse, onClose }:
                         onClick={handleGetAIResponse}
                         variant="outline"
                         size="sm"
-                        className="text-xs bg-gradient-to-r from-purple-500 to-blue-500 text-white border-0 hover:from-purple-600 hover:to-blue-600 hover:text-white shadow-sm transition-all duration-200 hover:shadow-md self-start sm:self-auto"
+                        className="text-xs bg-zinc-900 dark:bg-zinc-100 text-white dark:text-black border-0 hover:bg-zinc-800 dark:hover:bg-zinc-200 shadow-sm transition-all duration-200 hover:shadow-md self-start sm:self-auto"
                       >
                         <Sparkles className="w-3 h-3 mr-1.5 flex-shrink-0" />
                         Get AI Response
