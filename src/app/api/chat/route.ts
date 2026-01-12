@@ -9,6 +9,9 @@ import { getPresentation } from './tools/getPresentation';
 import { getProjects } from './tools/getProjects';
 import { getResume } from './tools/getResume';
 import { getSkills } from './tools/getSkills';
+import connectDB from '@/lib/mongodb';
+import ChatHistory from '@/models/ChatHistory';
+import syncPortfolioConfig from '@/lib/sync-config';
 
 export const maxDuration = 30;
 
@@ -29,7 +32,11 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { messages } = await req.json();
+    await connectDB();
+    // Sync config - in a real app you might want to do this less frequently
+    await syncPortfolioConfig();
+
+    const { messages, sessionId } = await req.json();
 
     const tools = {
       getProjects,
@@ -78,6 +85,27 @@ export async function POST(req: Request) {
         system: SYSTEM_PROMPT.content,
         maxSteps: 5,
         maxRetries: 2,
+        async onFinish({ text }) {
+          if (sessionId) {
+            try {
+              const lastUserMessage = messages[messages.length - 1];
+              await ChatHistory.findOneAndUpdate(
+                { sessionId },
+                {
+                  $push: {
+                    messages: [
+                      { role: 'user', content: lastUserMessage.content },
+                      { role: 'assistant', content: text }
+                    ]
+                  }
+                },
+                { upsert: true }
+              );
+            } catch (err) {
+              console.error('Failed to save chat history:', err);
+            }
+          }
+        },
       });
 
       return result.toDataStreamResponse();
@@ -110,6 +138,27 @@ export async function POST(req: Request) {
       system: SYSTEM_PROMPT.content,
       maxSteps: 5,
       maxRetries: 2,
+      async onFinish({ text }) {
+        if (sessionId) {
+          try {
+            const lastUserMessage = messages[messages.length - 1];
+            await ChatHistory.findOneAndUpdate(
+              { sessionId },
+              {
+                $push: {
+                  messages: [
+                    { role: 'user', content: lastUserMessage.content },
+                    { role: 'assistant', content: text }
+                  ]
+                }
+              },
+              { upsert: true }
+            );
+          } catch (err) {
+            console.error('Failed to save chat history:', err);
+          }
+        }
+      },
     });
 
     return result.toDataStreamResponse();

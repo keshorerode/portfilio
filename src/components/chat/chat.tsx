@@ -107,7 +107,21 @@ const Chat = () => {
     return () => container.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const [sessionId, setSessionId] = useState<string>('');
+
+  useEffect(() => {
+    let id = localStorage.getItem('chat_session_id');
+    if (!id) {
+      id = crypto.randomUUID();
+      localStorage.setItem('chat_session_id', id);
+    }
+    setSessionId(id);
+  }, []);
+
   const chatHelpers = useChat({
+    body: {
+      sessionId,
+    },
     onResponse: (response) => {
       if (response) {
         setLoadingSubmit(false);
