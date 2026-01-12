@@ -2,66 +2,71 @@
   "personal": {
     "name": "Keshore Venkatachalam Murugesan",
     "age": 22,
+    "date_of_birth": "12.11.2003",
     "location": "Tamil Nadu, India",
     "title": "Full Stack Developer | MERN | Firebase | ML Enthusiast",
     "email": "keshorevm@gmail.com",
     "phone": "",
     "handle": "@keshorevm",
-    "bio": "Hey 👋\nI'm Keshore, a Computer Science Engineering student passionate about full-stack development, automation, and data-driven applications. I enjoy building real-world projects using React, Node.js, Firebase, and Python, and I’m constantly improving my skills to become industry-ready.",
+    "bio": "Hey 👋\nI'm Keshore, a Computer Science Engineering student and active NCC cadet (CQMS) passionate about full-stack development and automation. I recently honed my technical skills as a Product Development Intern at Wersel, working on real-world web solutions. I enjoy building data-driven applications with LLMs and I’m constantly improving my skills to become industry-ready.",
     "avatar": "/profile1.webp",
     "fallbackAvatar": "https://images.unsplash.com/photo-1610216705422-caa3fcb6d158"
   },
   "education": {
     "current": {
-      "degree": "B.E / B.Tech in Computer Science and Engineering",
+      "degree": "B.E in Computer Science and Engineering",
       "institution": "Kongu Engineering College",
       "duration": "2022-2026",
       "cgpa": "6.54",
       "graduationDate": "2026"
+    },
+    "higher_secondary": {
+      "institution": "Bharathi Vidya Bhavan Hr. Mat. School",
+      "board": "State Board",
+      "year": "2022",
+      "percentage": "66",
+      "stream": "Computer Science"
+    },
+    "secondary": {
+      "institution": "Bharathi Vidya Bhavan Hr. Mat. School",
+      "board": "State Board",
+      "year": "2020",
+      "percentage": "57"
     }
   },
   "experience": [
     {
-      "company": "Datinfi Private Limited (Wersel – Sister Company)",
-      "position": "Software Development Intern",
+      "company": "Wersel Workdesk Limited",
+      "position": "Product Development Intern",
       "type": "Internship",
       "duration": "December 2025",
-      "description": "Worked on real-world development tasks involving frontend, backend integration, and automation scripts. Gained hands-on experience with production-ready code and project workflows.",
-      "technologies": [
-        "JavaScript",
-        "React",
-        "Node.js",
-        "MongoDB",
-        "Firebase"
-      ]
+      "description": "Worked on real-world development tasks involving frontend, backend integration, and automation scripts. Gained hands-on experience with production-ready code and project workflows."
     }
   ],
   "skills": {
     "programming": [
-      "JavaScript",
-      "Python",
-      "HTML",
-      "CSS",
-      "SQL"
+      "Java",
+      "Python"
     ],
     "web_development": [
       "React.js",
       "Node.js",
       "Express.js",
+      "MongoDB",
       "Firebase",
       "Bootstrap",
-      "Tailwind CSS"
+      "Tailwind CSS",
+      "Next.js"
     ],
     "databases": [
       "MongoDB",
-      "Firebase",
-      "MySQL"
+      "Firebase"
     ],
     "tools": [
       "Git",
       "GitHub",
       "VS Code",
-      "Postman"
+      "Figma"
     ],
     "other": [
       "Web Scraping",
@@ -69,11 +74,100 @@
       "API Integration"
     ]
   },
+  "achievements": [
+    {
+      "title": "1st Prize - Paper Presentation (Blockchain)",
+      "description": "Secured 1st place in the technical paper presentation at SNS College of Technology.",
+      "date": "2024"
+    },
+    {
+      "title": "3rd Prize - Paper Presentation (Blue Eye Technology)",
+      "description": "Secured 3rd place in the technical paper presentation at Hindustan College of Technology.",
+      "date": "2024"
+    },
+    {
+      "title": "NCC Camp Participation (IDC'24 & RDC'25)",
+      "description": "Selected for and participated in the Independence Day Camp (IDC '24) and Republic Day Camp (RDC '25) events at AR Erode.",
+      "date": "2024-2025"
+    }
+  ],
+  "leadership": [
+    {
+      "role": "Company Quartermaster Sergeant (CQMS)",
+      "organization": "National Cadet Corps (NCC)",
+      "description": "Served as CQMS and Corporal, handling logistics and team coordination."
+    },
+    {
+      "role": "Executive Member",
+      "organization": "English Proficiency Readers Club",
+      "description": "Active executive member promoting English proficiency among peers."
+    },
+    {
+      "role": "Executive Member",
+      "organization": "Officer Preparatory Cell",
+      "description": "Contributed to the cell dedicated to preparing students for officer-level roles."
+    }
+  ],
   "projects": [
     {
+      "title": "AI Assisted Portfolio",
+      "images": [
+        {
+          "src": "/img/projects/portfolio.png",
+          "alt": "AI Assisted Portfolio"
+        }
+      ],
+      "category": "API Integration",
+      "description": "A modern, AI-driven personal portfolio acting as a 'Keshore Assistant' built with Next.js 15 and Tailwind CSS. It features a sophisticated interactive chatbot powered by LLM that allows recruiters to inquire about skills and experience in real-time. The application utilizes MongoDB for persistent chat history and Framer Motion for high-end aesthetic animations.",
+      "techStack": [
+        "Next.js 15",
+        "Tailwind CSS",
+        "MongoDB",
+        "API Integration"
+      ],
+      "status": "Completed",
+      "featured": true,
+      "links": [
+        {
+          "name": "GitHub",
+          "url": "https://github.com/keshorerode"
+        }
+      ]
+    },
+    {
+      "title": "Zomato Data Scraper",
+      "images": [
+        {
+          "src": "/img/projects/data-scrapping.jpg",
+          "alt": "Zomato Data Scraper"
+        }
+      ],
+      "category": "Automation / Web Scraping",
+      "description": "A Python automation project designed to process website data programmatically across multiple locations. It utilizes XPath for precise element location and handles pagination to run scripts sequentially for large datasets. The tool logs progress in the terminal and was tested across three different towns to analyze workflow behavior with varying data sizes.",
+      "techStack": [
+        "Python",
+        "XPath",
+        "Automation"
+      ],
+      "status": "Completed",
+      "featured": true,
+      "links": [
+        {
+          "name": "GitHub",
+          "url": "https://github.com/keshorerode/Data_scrapping.git"
+        }
+      ]
+    },
+    {
       "title": "Expense Tracker",
+      "images": [
+        {
+          "src": "/img/projects/expense.png",
+          "alt": "Expense Tracker"
+        }
+      ],
       "category": "Full Stack Web App",
-      "description": "A finance management application with authentication, income and expense tracking, dashboard analytics, and CSV import/export functionality.",
+      "description": "A finance management dashboard designed to analyze income and expenditure through visual analytics. It features secure authentication, CSV export/import capabilities, and a user-friendly interface for tracking real-time financial health.",
       "techStack": [
         "React",
         "Firebase",
@@ -84,21 +178,83 @@
       "links": [
         {
           "name": "Live Site",
-          "url": "https://expense-tracker-wallet-guard-3bdi.vercel.app/"
+          "url": "https://expense-tracker-wallet-guard-3bdi.vercel.app/dashboard"
         }
       ]
     },
     {
-      "title": "Zomato Data Scraper",
-      "category": "Automation / Web Scraping",
-      "description": "Python-based scraper that extracts restaurant details, menus, and reviews from Zomato for analysis and storage.",
+      "title": "Croyez Clothing Store",
+      "images": [
+        {
+          "src": "/img/projects/ecart.png",
+          "alt": "Croyez Clothing Store"
+        }
+      ],
+      "category": "Full Stack Web App",
+      "description": "Developed a full-stack e-commerce site for men's fashion using React, Node.js, and MongoDB with secure payments and admin inventory control.",
       "techStack": [
-        "Python",
-        "BeautifulSoup",
-        "Requests"
+        "React",
+        "Node.js",
+        "MongoDB",
+        "Express.js"
       ],
       "status": "Completed",
-      "featured": true
+      "featured": true,
+      "links": [
+        {
+          "name": "Live Site",
+          "url": "https://croyezclothing.vercel.app/"
+        }
+      ]
+    },
+    {
+      "title": "College Hostel Portal",
+      "images": [
+        {
+          "src": "/img/projects/hostel.png",
+          "alt": "College Hostel Portal"
+        }
+      ],
+      "category": "Management System",
+      "description": "A comprehensive management system built using Flask and MySQL to streamline hostel operations. It offers features like secure multi-role authentication, automated room booking with occupancy tracking, and a digital outpass management system. The project is currently evolving into 'Hostel-v2' with a React-based frontend for a modular architecture.",
+      "techStack": [
+        "Python",
+        "React",
+        "Flask",
+        "MySQL"
+      ],
+      "status": "Completed",
+      "featured": true,
+      "links": [
+        {
+          "name": "GitHub",
+          "url": "https://github.com/keshorerode/COLLEGE_HOSTEL_PORTAL-.git"
+        }
+      ]
+    },
+    {
+      "title": "Billing Software System",
+      "images": [
+        {
+          "src": "/img/projects/billing.png",
+          "alt": "Billing Software System"
+        }
+      ],
+      "category": "Desktop Application",
+      "description": "A comprehensive billing solution built with Python and Tkinter that streamlines invoicing and payment tracking. It features distinct Admin and Employee login modes for secure access to inventory and sales data. The system uses a normalized MySQL database to manage customers, products, and transactions efficiently. Key functions include automated bill generation, tax calculation, and real-time reporting.",
+      "techStack": [
+        "Python",
+        "Tkinter",
+        "MySQL"
+      ],
+      "status": "Completed",
+      "featured": true,
+      "links": [
+        {
+          "name": "GitHub",
+          "url": "https://github.com/keshorerode/billing-system.git"
+        }
+      ]
     },
     {
       "title": "Smart Post Box",
@@ -172,8 +328,8 @@
     ]
   },
   "meta": {
-    "configVersion": "1.0",
+    "configVersion": "1.2",
     "generatedBy": "Keshore Venkatachalam Murugesan",
-    "description": "Portfolio chatbot configuration for digital twin interface"
+    "description": "Portfolio chatbot configuration as Keshore's Assistant"
   }
 }

@@ -133,8 +133,22 @@ const Chat = () => {
     onError: (error) => {
       setLoadingSubmit(false);
       stop();
-      console.warn('Chat error:', error);
-      const errorMessage = error.message?.toLowerCase() || '';
+
+      // Log the full error for debugging
+      console.error('[CHAT-UI-ERROR]:', error);
+
+      // Attempt to extract a meaningful message from different error formats
+      let errorMessage = 'An unexpected error occurred';
+
+      const err = error as any;
+      if (err instanceof Error) {
+        errorMessage = err.message.toLowerCase();
+      } else if (typeof err === 'string') {
+        errorMessage = err.toLowerCase();
+      } else if (err && typeof err === 'object') {
+        const msg = err.message;
+        errorMessage = msg ? String(msg).toLowerCase() : JSON.stringify(err).toLowerCase();
+      }
 
       if (
         errorMessage.includes('quota') ||
@@ -145,26 +159,14 @@ const Chat = () => {
         errorMessage.includes('rate limit') ||
         errorMessage.includes('error occurred')
       ) {
-        toast.error('⚠️ API Quota Exhausted! Free API limit reached.', {
-          duration: 6000,
-          style: {
-            background: '#fef3c7',
-            border: '1px solid #f59e0b',
-            color: '#92400e',
-            fontSize: '14px',
-            fontWeight: '500',
-          },
-        });
+        toast.error('⚠️ AI service limit reached. Please try again later.');
         setErrorMessage('quota_exhausted');
-        setMessages((prev) =>
-          prev.filter(m => !m.content.toLowerCase().includes('quota exhausted'))
-        );
-      } else if (errorMessage.includes('network')) {
-        toast.error('Network error. Please check your connection.');
+      } else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
+        toast.error('Network error. Check your database connection.');
         setErrorMessage('Network error. Please check your connection.');
       } else {
         setErrorMessage('quota_exhausted');
-        toast.error('AI service temporarily unavailable. Please try again or use presets.');
+        toast.error('AI service temporarily unavailable. You can still use the preset questions below.');
       }
     },
     onToolCall: (tool) => {

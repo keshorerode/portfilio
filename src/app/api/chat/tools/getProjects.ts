@@ -1,14 +1,14 @@
 
 import { tool } from "ai";
 import { z } from "zod";
-import { getConfig } from "@/lib/config-loader";
+import { getConfigFromDB } from "@/lib/config-db";
 
 export const getProjects = tool({
   description:
     "This tool showcases a comprehensive project portfolio, highlighting technical achievements and real-world impact.",
   parameters: z.object({}),
   execute: async () => {
-    const config = getConfig();
+    const config = await getConfigFromDB();
 
     return {
       projects: config.projects.map(project => ({

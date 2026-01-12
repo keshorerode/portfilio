@@ -44,3 +44,9 @@ next-env.d.ts
 
 # landing page repo (separate repository)
 /landing-page/
+
+# image source/backups (hidden from others)
+/img/
+/public/img/
+
+
