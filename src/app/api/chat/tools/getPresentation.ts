@@ -8,7 +8,7 @@ export const getPresentation = tool({
   parameters: z.object({}),
   execute: async () => {
     const config = getConfig();
-    
+
     return {
       presentation: config.personal.bio,
       name: config.personal.name,

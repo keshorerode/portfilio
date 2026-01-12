@@ -9,7 +9,7 @@ export const getProjects = tool({
   parameters: z.object({}),
   execute: async () => {
     const config = getConfig();
-    
+
     return {
       projects: config.projects.map(project => ({
         title: project.title,

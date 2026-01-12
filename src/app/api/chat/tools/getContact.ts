@@ -8,7 +8,7 @@ export const getContact = tool({
   parameters: z.object({}),
   execute: async () => {
     const config = getConfig();
-    
+
     return {
       contact: {
         email: config.personal.email,

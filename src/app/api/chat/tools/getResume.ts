@@ -8,7 +8,7 @@ export const getResume = tool({
   parameters: z.object({}),
   execute: async () => {
     const config = getConfig();
-    
+
     return {
       personalInfo: {
         name: config.personal.name,

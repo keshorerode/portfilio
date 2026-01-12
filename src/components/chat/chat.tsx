@@ -90,6 +90,8 @@ const Chat = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const isAtBottom = useRef(true);
+  const lastMessageRef = useRef<HTMLDivElement>(null);
+  const presetReplyRef = useRef<HTMLDivElement>(null);
 
   // Track if scroll is at bottom
   useEffect(() => {
@@ -234,16 +236,35 @@ const Chat = () => {
     return result;
   }, [messages]);
 
+  // Calculate header height based on hasActiveTool
+  const headerHeight = hasActiveTool ? 100 : 200;
+
+
   const isEmptyState = !currentAIMessage && !latestUserMessage && !loadingSubmit && !presetReply && !errorMessage;
 
   useEffect(() => {
     if (scrollRef.current && !isEmptyState) {
-      scrollRef.current.scrollTo({
-        top: scrollRef.current.scrollHeight,
-        behavior: 'smooth',
-      });
+      // Determine the target element to scroll to
+      const targetElement = presetReply ? presetReplyRef.current : lastMessageRef.current;
+
+      if (targetElement) {
+        // We want to scroll to the top of the message, but offset by the header height
+        // so it doesn't end up behind the fixed avatar header.
+        const scrollOffset = targetElement.offsetTop - (headerHeight + 20);
+
+        scrollRef.current.scrollTo({
+          top: Math.max(0, scrollOffset),
+          behavior: 'smooth',
+        });
+      } else {
+        // Fallback if no specific element ref is found
+        scrollRef.current.scrollTo({
+          top: scrollRef.current.scrollHeight,
+          behavior: 'smooth',
+        });
+      }
     }
-  }, [messages, loadingSubmit, isEmptyState]);
+  }, [messages, loadingSubmit, isEmptyState, presetReply, headerHeight]);
 
   const isToolInProgress = messages.some(
     (m) => m.role === 'assistant' && m.parts?.some(
@@ -308,9 +329,6 @@ const Chat = () => {
   };
 
 
-  // Calculate header height based on hasActiveTool
-  const headerHeight = hasActiveTool ? 100 : 200;
-
   return (
     <div className="relative h-screen overflow-hidden">
       {/* Fixed Avatar Header with Gradient */}
@@ -362,6 +380,7 @@ const Chat = () => {
                 {messages.map((m, index) => (
                   <motion.div
                     key={m.id || index}
+                    ref={index === messages.length - 1 ? lastMessageRef : null}
                     {...MOTION_CONFIG}
                     className="flex flex-col gap-2"
                   >
@@ -392,7 +411,7 @@ const Chat = () => {
 
                 {/* Floating States (Preset Reply / Error / Loading) */}
                 {presetReply && (
-                  <div className="pb-4">
+                  <div ref={presetReplyRef} className="pb-4">
                     <PresetReply
                       question={presetReply.question}
                       reply={presetReply.reply}
